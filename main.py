@@ -64,12 +64,27 @@ def signup_user():
     return render_template("signup.html")
 
 
-app.route("/submit_signup_details", methods=["POST"])
+@app.route('/submit_signup_details', methods=['POST'])
 def submit_signup_details():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
     confirm_password = request.form.get('confirm-password')
+    terms = request.form.get('terms')
+
+    if password != confirm_password:
+        return "Passwords do not match", 400
+
+    # create a new user
+    signup_result = create_user_account(username=username, email=email, password=password)
+
+    # Store data in the session
+    session['username'] = username
+
+    if "Signup Successful" in signup_result:
+        return redirect(url_for('login_user'))  # Redirect to login page after successful signup
+    else:
+        return "Signup Failed", 400
 
 
 # ---------------------- other section -------------------------------------

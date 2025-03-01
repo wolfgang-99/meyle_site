@@ -58,21 +58,20 @@ def generate_password():
     return password
 
 
-def create_user_account(username, email, balance, password):
+def create_user_account(username, email, password):
     try:
         # Connect to mongodb
         client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
-        db = client['ellextraDB']
+        db = client['meyleDB']
         collection = db['login_details']
 
         submission = {'username': username,
                       'email': email,
-                      'balance': balance,
                       'password': password
                       }
         collection.insert_one(submission)
         print(f"data has been recoreded")
-        return True
+        return "Signup Successful"
 
     except Exception as e:
         return "An error occurred: " + str(e)
