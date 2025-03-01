@@ -156,6 +156,6 @@ def email_admin_withdrawal_info(admin_email,  register_name, file_path, withdraw
             print('withdrawal email sent to admin')
 
 # email_admin(register_email='wolf@gmail.com', register_name= 'wolf', admin_email="blazealex348@gmail.com",
-#             file_path="Email text/Admin_email_notification_deposite",
+#             file_path="Email-text/Admin_email_notification_deposite",
 #             deposit_amount='500', wallet='btc')
-# email_user(register_email="wolfworldtrade@gmail.com", register_name='wolf', file_path='Email text/Deposite_Email_text.txt')
+# email_user(register_email="wolfworldtrade@gmail.com", register_name='wolf', file_path='Email-text/User_email_notification_order.txt')

@@ -1,15 +1,16 @@
 import datetime as dt
+import os
+from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
     update_withdrawal_collection, delete_user_account
 
-
+load_dotenv()
 app = Flask(__name__)
-# app.secret_key = os.getenv("secret_key")  # Set a secret key for sessions
-app.secret_key = "ellextra" # Set a secret key for sessions
-MONGODB_URL = "mongodb+srv://ellextrateam:cM7GgxyshGfNMzDT@cluster0.j6jowjl.mongodb.net/?retryWrites=true&w=majority"
+app.secret_key = os.getenv("secret_key") # Set a secret key for sessions
+MONGODB_URL = os.getenv("MONGODB_URL")
 
 
 @app.route('/Home')
