@@ -4,17 +4,16 @@ import os
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify,make_response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
     update_withdrawal_collection, delete_user_account
 from translate import Translator
 import json
 from email_module import email_admin, email_user
 
-
 load_dotenv()
 app = Flask(__name__)
-app.secret_key = os.getenv("secret_key") # Set a secret key for sessions
+app.secret_key = os.getenv("secret_key")  # Set a secret key for sessions
 MONGODB_URL = os.getenv("MONGODB_URL")
 
 
@@ -31,6 +30,7 @@ def translate_text(text, dest_language):
         print(f"Translation error: {e}")
         return text  # Return original text if translation fails
 
+
 @app.route('/')
 def Home():
     # Get user's selected language from cookies (default to English)
@@ -45,12 +45,13 @@ def Home():
     # Render the template with translated text
     return render_template('index.html', user_lang=user_lang, **translated_text)
 
+
 @app.route('/set_language/<language>')
 def set_language(language):
-
     response = make_response(redirect(url_for("Home")))
     response.set_cookie('user_lang', language)
     return response
+
 
 # ------------------------ login  section ---------------------------------
 @app.route('/login', methods=['GET'])
@@ -143,9 +144,11 @@ async def submit_signup_details():
         # send a registration email
         asyncio.create_task(send_email_notification_singup(email, username))
 
+        flash("signup successful", 'success')
         return redirect(url_for('login_user'))  # Redirect to login page after successful signup
 
     elif "user exist" in signup_result:
+        flash("user already existed. choose another email", 'error')
         return redirect(url_for("signup_user"))
 
     else:
@@ -198,7 +201,7 @@ def dashboard():
 
             data = {
                 "username": username,
-                "account_balance":  user_document.get("balance"),
+                "account_balance": user_document.get("balance"),
                 "date": "No Transaction",
                 "withdrawalAmount": "No Transaction",
                 "paymentCurrency": "No Transaction",
@@ -224,7 +227,6 @@ def profiles():
         # find document of the user in session
         document = collection.find_one({"username": username})
 
-
         data = {
             "profile_name": username,
             "email": document.get("email")
@@ -234,7 +236,6 @@ def profiles():
     else:
         flash('You need to login first.', 'warning')
         return redirect(url_for("Home"))
-
 
 
 @app.route('/setting', methods=['GET', 'POST'])

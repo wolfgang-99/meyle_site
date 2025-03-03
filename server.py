@@ -70,7 +70,7 @@ def create_user_account(username, email, password):
         collection = db['login_details']
 
         # Check if the username already exists in the database
-        existing_user = collection.find_one({'username': username})
+        existing_user = collection.find_one({'email': email})
         if existing_user:
             print("Username already exists. Please choose a different username.")
             return "user exist"
