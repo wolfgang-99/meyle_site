@@ -13,19 +13,17 @@ client = MongoClient(MONGODB_URL)
 db = client['meyleDB']
 
 
-def authenticate_user(username, password):
+def authenticate_user(email, password):
     try:
-        # Connect to mongodb
-        client = MongoClient(MONGODB_URL)
-        db = client['ellextraDB']
+        # Chose collection
         collection = db['login_details']
 
         # Define the criteria for the username and password
-        input_username = username
+        input_email = email
         input_password = password
 
         # Find the user by username
-        user_login_document = collection.find_one({"username": input_username})
+        user_login_document = collection.find_one({"email": input_email})
 
         if user_login_document:
             stored_password = user_login_document["password"]

@@ -70,16 +70,16 @@ def login_user():
 
 @app.route('/submit_login_details', methods=['POST'])
 def submit_login_details():
-    username = request.form.get('username')
+    email = request.form.get('email')
     password = request.form.get('password')
 
     # call the authenticate function and use it
-    auth_result = authenticate_user(username, password)
+    auth_result = authenticate_user(email, password)
 
     if "Login Successful" in auth_result:
 
         # Store data in the session
-        session['username'] = username
+        session['email'] = email
 
         return redirect(url_for('dashboard'))
     elif "Login Failed: Incorrect Password" in auth_result:
@@ -90,16 +90,16 @@ def submit_login_details():
 
 @app.route('/Login_Failed_Incorrect_Password')
 def login_failed_incorrect_password():
-    session.pop("username", None)
-    flash('Login Failed: Incorrect_Password', 'danger')
-    return redirect(url_for("Home"))
+    session.pop("email", None)
+    flash('Login Failed: Incorrect_Password', 'error')
+    return redirect(url_for("login_user"))
 
 
 @app.route('/login_failed_user_not_found')
 def login_failed_user_not_found():
-    session.pop("username", None)
-    flash('Login Failed: User not found', 'danger')
-    return redirect(url_for("Home"))
+    session.pop("email", None)
+    flash('Login Failed: User not found', 'error')
+    return redirect(url_for("login_user"))
 
 
 # ------------------------ signup section ----------------------------------------------
