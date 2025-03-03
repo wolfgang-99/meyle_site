@@ -136,15 +136,18 @@ async def submit_signup_details():
     # create a new user
     signup_result = create_user_account(username=username, email=email, password=password)
 
-    # Store data in the session
-    session['username'] = username
-
     if "Signup Successful" in signup_result:
+        # Store data in the session
+        session['email'] = email
 
         # send a registration email
         asyncio.create_task(send_email_notification_singup(email, username))
 
         return redirect(url_for('login_user'))  # Redirect to login page after successful signup
+
+    elif "user exist" in signup_result:
+        return redirect(url_for("signup_user"))
+
     else:
         return "Signup Failed", 400
 

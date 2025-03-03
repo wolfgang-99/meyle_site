@@ -6,8 +6,11 @@ from dotenv import load_dotenv
 import os
 
 load_dotenv()
-
 MONGODB_URL = os.getenv("MONGODB_URL")
+
+# Connect to mongodb
+client = MongoClient(MONGODB_URL)
+db = client['meyleDB']
 
 
 def authenticate_user(username, password):
@@ -64,10 +67,13 @@ def generate_password():
 
 def create_user_account(username, email, password):
     try:
-        # Connect to mongodb
-        client = MongoClient(MONGODB_URL)
-        db = client['meyleDB']
         collection = db['login_details']
+
+        # Check if the username already exists in the database
+        existing_user = collection.find_one({'username': username})
+        if existing_user:
+            print("Username already exists. Please choose a different username.")
+            return "user exist"
 
         submission = {'username': username,
                       'email': email,
