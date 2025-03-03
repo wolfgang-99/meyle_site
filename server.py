@@ -2,8 +2,12 @@ import random
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from bson import ObjectId
+from dotenv import load_dotenv
+import os
 
-MONGODB_URL = "mongodb+srv://ellextrateam:cM7GgxyshGfNMzDT@cluster0.j6jowjl.mongodb.net/?retryWrites=true&w=majority"
+load_dotenv()
+
+MONGODB_URL = os.getenv("MONGODB_URL")
 
 
 def authenticate_user(username, password):
@@ -61,7 +65,7 @@ def generate_password():
 def create_user_account(username, email, password):
     try:
         # Connect to mongodb
-        client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
+        client = MongoClient(MONGODB_URL)
         db = client['meyleDB']
         collection = db['login_details']
 

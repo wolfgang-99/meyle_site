@@ -1,0 +1,11 @@
+{
+    "heading": "Create Your Account",
+    "sub_heading": "Join us to get started",
+    "username_label": "Username",
+    "email_label": "Email Address",
+    "password_label": "Password",
+    "confirm_password_labell": "confirm-password",
+    "sign_up": "Sign Up",
+    "account": "Already have an account?",
+    "log_in": "Log in"
+}

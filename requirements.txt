@@ -1,4 +1,5 @@
 pymongo
-Flask
+Flask[async]
 gunicorn
 python-dotenv
+translate

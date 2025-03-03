@@ -104,7 +104,7 @@ def email_user(register_email, register_name, file_path):
         sender_email = 'Team.Ellextra@gmail.com'
         sender_password = 'wisz ygnu olwl waxr'
         subject = 'Ellextra team'
-        image_path = 'static/assets/images/logo.png'
+        image_path = 'static/images/logo.png'
         file_path = file_path
 
         paragraphs = user_read_message(file_path, register_name)

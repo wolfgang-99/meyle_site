@@ -1,11 +1,16 @@
+import asyncio
 import datetime as dt
 import os
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify,make_response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
     update_withdrawal_collection, delete_user_account
+from translate import Translator
+import json
+from email_module import email_admin, email_user
+
 
 load_dotenv()
 app = Flask(__name__)
@@ -13,15 +18,53 @@ app.secret_key = os.getenv("secret_key") # Set a secret key for sessions
 MONGODB_URL = os.getenv("MONGODB_URL")
 
 
-@app.route('/Home')
-def Home():
-    return render_template("index.html")
+# Function to translate text
+def translate_text(text, dest_language):
+    try:
+        if dest_language == 'en':  # No translation needed for English
+            return text
 
+        translator = Translator(to_lang=dest_language)
+        translated = translator.translate(text)
+        return translated
+    except Exception as e:
+        print(f"Translation error: {e}")
+        return text  # Return original text if translation fails
+
+@app.route('/')
+def Home():
+    # Get user's selected language from cookies (default to English)
+    user_lang = request.cookies.get('user_lang', 'en')
+
+    # Load the JSON file
+    with open('translate/index_translate.json', 'r', encoding='utf-8') as json_file:
+        text_to_translate = json.load(json_file)
+    # Translate the text
+    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+
+    # Render the template with translated text
+    return render_template('index.html', user_lang=user_lang, **translated_text)
+
+@app.route('/set_language/<language>')
+def set_language(language):
+
+    response = make_response(redirect(url_for("Home")))
+    response.set_cookie('user_lang', language)
+    return response
 
 # ------------------------ login  section ---------------------------------
 @app.route('/login', methods=['GET'])
 def login_user():
-    return render_template("login.html")
+    # Get user's selected language from cookies (default to English)
+    user_lang = request.cookies.get('user_lang', 'en')
+
+    # Load the JSON file
+    with open('translate/login_translate.json', 'r', encoding='utf-8') as json_file:
+        text_to_translate = json.load(json_file)
+    # Translate the text
+    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+
+    return render_template("login.html", **translated_text)
 
 
 @app.route('/submit_login_details', methods=['POST'])
@@ -61,11 +104,26 @@ def login_failed_user_not_found():
 # ------------------------ signup section ----------------------------------------------
 @app.route("/sign_up", methods=['GET'])
 def signup_user():
-    return render_template("signup.html")
+    # Get user's selected language from cookies (default to English)
+    user_lang = request.cookies.get('user_lang', 'en')
+
+    # Define the text to be translated
+    # Load the JSON file
+    with open('translate/signup_translate.json', 'r', encoding='utf-8') as json_file:
+        text_to_translate = json.load(json_file)
+    # Translate the text
+    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+
+    return render_template("signup.html", **translated_text)
+
+
+async def send_email_notification_singup(email, username):
+    # Put your email sending code here
+    email_user(register_email=email, register_name=username, file_path='Email-text/signup_Email_text.txt')
 
 
 @app.route('/submit_signup_details', methods=['POST'])
-def submit_signup_details():
+async def submit_signup_details():
     username = request.form.get('username')
     email = request.form.get('email')
     password = request.form.get('password')
@@ -82,6 +140,10 @@ def submit_signup_details():
     session['username'] = username
 
     if "Signup Successful" in signup_result:
+
+        # send a registration email
+        asyncio.create_task(send_email_notification_singup(email, username))
+
         return redirect(url_for('login_user'))  # Redirect to login page after successful signup
     else:
         return "Signup Failed", 400

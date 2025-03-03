@@ -3,7 +3,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="./static/output.css" rel="stylesheet">
-    <title>Blessed uncle mike limited</title>
+    <title>{{ title }}</title>
 </head>
 
 <body>
@@ -147,10 +147,27 @@
                 </div>
               </div>
             </div>
-      
-            <a href="#" class="text-sm/6 font-semibold text-white hover:text-white/50">Features</a>
+
             <a href="#" class="text-sm/6 font-semibold text-white hover:text-white/50">Marketplace</a>
             <a href="#" class="text-sm/6 font-semibold text-white hover:text-white/50">About Us</a>
+
+            <!--langauge div  -->
+            <div id="language_translate" class="text-sm/6 font-semibold text-white hover:text-white/50 flex items-center gap-2">
+
+              <!-- Globe Icon -->
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                  <path d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10-4.477 10-10 10zm-2.29-2.333A17.9 17.9 0 0 1 8.027 13H4.062a8.008 8.008 0 0 0 5.648 6.667zM10.03 13c.151 2.439.848 4.73 1.97 6.752A15.905 15.905 0 0 0 13.97 13h-3.94zm9.908 0h-3.965a17.9 17.9 0 0 1-1.683 6.667A8.008 8.008 0 0 0 19.938 13zM4.062 11h3.965a17.9 17.9 0 0 1 1.683-6.667A8.008 8.008 0 0 0 4.062 11zm5.648-6.667A17.9 17.9 0 0 1 9.71 4.333 8.008 8.008 0 0 0 4.062 11H8.03a17.9 17.9 0 0 1-1.683-6.667zM12 4.248A15.905 15.905 0 0 0 10.03 11h3.94A15.904 15.904 0 0 0 12 4.248z"/>
+                </svg>
+
+              <!-- Language Dropdown -->
+              <select onchange="setLanguage(this.value)">
+                <option class="text-black" value="en" {% if user_lang == 'en' %}selected{% endif %}>English</option>
+                <option class="text-black" value="es" {% if user_lang == 'es' %}selected{% endif %}>Español</option>
+                <option class="text-black" value="fr" {% if user_lang == 'fr' %}selected{% endif %}>Français</option>
+                <option class="text-black" value="de" {% if user_lang == 'de' %}selected{% endif %}>Deutsch</option>
+                <option class="text-black" value="zh-cn" {% if user_lang == 'zh-cn' %}selected{% endif %}>中文</option>
+              </select>
+            </div>
           </div>
 
            <!-- Add Login and Signup buttons here -->
@@ -216,21 +233,21 @@
   <!-- intro Section -->
   <section class="bg-blue-300 text-white py-6">
     <div class="container mx-auto px-6 text-center">
-      <h1 class="text-4xl font-bold">Welcome to Our Company</h1>
-      <p class="mt-2 text-lg">Innovative Solutions for a Better Tomorrow</p>
+      <h1 class="text-4xl font-bold">{{ welcome_heading }}</h1>
+      <p class="mt-2 text-lg">{{ welcome_subheading }}</p>
     </div>
   </section>
 
   <!-- Hero Section -->
     <section class="bg-white py-20">
       <div class="container mx-auto px-6 text-center">
-        <h2 class="text-3xl font-bold text-gray-800">Your Success is Our Priority</h2>
+        <h2 class="text-3xl font-bold text-gray-800">{{success_heading}}</h2>
         <p class="mt-4 text-gray-600 max-w-2xl mx-auto">
-          We are dedicated to providing top-notch services and solutions tailored to meet your needs. Let us help you achieve your goals.
+          {{ success_subheading }}
         </p>
         <div class="mt-8">
           <a href="#services" class="bg-blue-600 text-white px-6 py-3 rounded-full font-semibold hover:bg-blue-900 transition duration-300">
-            Explore Our Services
+            {{ explore_services_button }}
           </a>
         </div>
       </div>
@@ -239,7 +256,7 @@
   <!-- Services Section -->
     <section id="services" class="bg-gray-100 py-20">
       <div class="container mx-auto px-6">
-        <h2 class="text-3xl font-bold text-center text-gray-800">Our Services</h2>
+        <h2 class="text-3xl font-bold text-center text-gray-800">{{services_heading}}</h2>
         <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- Service 1 -->
           <div class="bg-white p-6 rounded-lg shadow-lg text-center">
@@ -281,9 +298,9 @@
       
             <!-- Content Section -->
             <div class="md:w-1/2 md:pl-12">
-              <h2 class="text-3xl font-bold text-gray-800 mb-6">About Us</h2>
+              <h2 class="text-3xl font-bold text-gray-800 mb-6">{{about_heading}}</h2>
               <p class="text-gray-600 mb-6">
-                We are a passionate team dedicated to delivering exceptional solutions for our clients. With years of experience and a commitment to innovation, we strive to make a positive impact in everything we do. Our mission is to help businesses grow and succeed by providing top-notch services tailored to their unique needs.
+                {{about_description}}
               </p>
               <p class="text-gray-600 mb-8">
                 Whether you're a startup or an established enterprise, we’re here to support you every step of the way. Let’s build something amazing together!
@@ -305,41 +322,40 @@
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
           <!-- Column 1: About Us -->
           <div>
-            <h3 class="text-lg font-semibold mb-4">About Us</h3>
+            <h3 class="text-lg font-semibold mb-4">{{footer_about}}</h3>
             <p class="text-sm text-gray-400">
-              We are a company dedicated to providing the best services and products to our customers. Our mission is to make your life easier and more enjoyable.
+                {{footer_about_description}}
             </p>
           </div>
 
           <!-- Column 2: Quick Links -->
           <div>
-            <h3 class="text-lg font-semibold mb-4">Quick Links</h3>
+            <h3 class="text-lg font-semibold mb-4">{{footer_quick_links}}</h3>
             <ul class="text-sm">
               <li class="mb-2">
-                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Home</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">{{footer_home}}</a>
               </li>
               <li class="mb-2">
-                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Services</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">{{footer_services}}</a>
               </li>
               <li class="mb-2">
-                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">About</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">{{footer_about_us}}</a>
               </li>
               <li class="mb-2">
-                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Contact</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">{{footer_contact}}</a>
               </li>
               <li class="mb-2">
-                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">Privacy Policy</a>
+                <a href="#" class="text-gray-400 hover:text-white transition-colors duration-300">{{footer_privacy_policy}}</a>
               </li>
             </ul>
           </div>
 
           <!-- Column 3: Contact Info -->
           <div>
-            <h3 class="text-lg font-semibold mb-4">Contact Info</h3>
+            <h3 class="text-lg font-semibold mb-4">{{footer_contact_info}}</h3>
             <ul class="text-sm text-gray-400">
-              <li class="mb-2">123 Main Street, City, Country</li>
-              <li class="mb-2">Email: info@example.com</li>
-              <li class="mb-2">Phone: +1 234 567 890</li>
+              <li class="mb-2">{{footer_address}}</li>
+              <li class="mb-2">{{footer_phone}}</li>
             </ul>
           </div>
         </div>
@@ -347,7 +363,7 @@
         <!-- Bottom Section: Copyright -->
         <div class="border-t border-gray-700 mt-8 pt-8 text-center">
           <p class="text-sm text-gray-400">
-            &copy; 2023 Your Company. All rights reserved.
+            {{footer_copyright}}
           </p>
         </div>
       </div>
@@ -356,18 +372,27 @@
 <!-- Link to index.js file -->
 <script src="./static/index.js"></script>
 
-<!-- Smartsupp Live Chat script -->
-<script type="text/javascript">
-    var _smartsupp = _smartsupp || {};
-    _smartsupp.key = '6f04eb60f92d44058c0bb94671e5778994fecf12';
-    window.smartsupp||(function(d) {
-      var s,c,o=smartsupp=function(){ o._.push(arguments)};o._=[];
-      s=d.getElementsByTagName('script')[0];c=d.createElement('script');
-      c.type='text/javascript';c.charset='utf-8';c.async=true;
-      c.src='https://www.smartsuppchat.com/loader.js?';s.parentNode.insertBefore(c,s);
-    })(document);
+<!-- start of  language translate -->
+<script>
+  function setLanguage(lang) {
+    window.location.href = `/set_language/${lang}`;
+  }
 </script>
-<noscript> Powered by <a href=“https://www.smartsupp.com” target=“_blank”>Smartsupp</a></noscript>
+<!--  end of language translate-->
+
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/6419a0504247f20fefe723db/1gs21kfh6';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
 
 </body>
 </html>
