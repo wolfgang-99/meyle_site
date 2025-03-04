@@ -12,15 +12,30 @@ import json
 from email_module import email_admin, email_user
 import logging
 import sys
+from flask_cors import CORS
+
 
 load_dotenv()
 app = Flask(__name__)
+CORS(app)
 app.secret_key = os.getenv("secret_key")  # Set a secret key for sessions
 MONGODB_URL = os.getenv("MONGODB_URL")
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
+
+@app.route('/test-mongodb')
+def test_mongodb():
+    try:
+        client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
+        db = client['meyleDB']
+        collection = db['login_details']
+        result = collection.find_one()
+        return jsonify({"status": "success", "result": str(result)})
+    except Exception as e:
+        logger.error(f"MongoDB connection error: {e}")
+        return jsonify({"status": "error", "message": str(e)}), 500
 
 @app.errorhandler(Exception)
 def handle_exception(e):
