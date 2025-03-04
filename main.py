@@ -10,12 +10,22 @@ from server import authenticate_user, create_user_account, generate_password, up
 from translate import Translator
 import json
 from email_module import email_admin, email_user
+import logging
+import sys
 
 load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("secret_key")  # Set a secret key for sessions
 MONGODB_URL = os.getenv("MONGODB_URL")
 
+# Configure logging
+logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
+logger = logging.getLogger(__name__)
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"An error occurred: {e}", exc_info=True)
+    return "Internal Server Error", 500
 
 # Function to translate text
 def translate_text(text, dest_language):
