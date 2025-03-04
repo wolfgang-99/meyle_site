@@ -3,4 +3,4 @@ Flask[async]
 gunicorn
 python-dotenv
 translate
-json
+
