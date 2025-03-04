@@ -3,4 +3,4 @@ Flask[async]
 gunicorn
 python-dotenv
 translate
-
+flask_cors
