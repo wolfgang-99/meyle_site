@@ -1,24 +1,32 @@
 import asyncio
 import datetime as dt
 import os
+
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
-    update_withdrawal_collection, delete_user_account
+    update_withdrawal_collection, delete_user_account, get_product
 from translate import Translator
 import json
 from email_module import email_admin, email_user
 import logging
 import sys
-from flask_cors import CORS
+from aiocache import cached, Cache  # Use aiocache for async caching
+from datetime import timedelta
+
 
 
 load_dotenv()
 app = Flask(__name__)
-CORS(app)
+
 app.secret_key = os.getenv("secret_key")  # Set a secret key for sessions
+app.permanent_session_lifetime = timedelta(hours=3)
+
+# # Configure Flask-Caching
+# cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})  # Use in-memory caching
+
 MONGODB_URL = os.getenv("MONGODB_URL")
 
 # Configure logging
@@ -32,32 +40,37 @@ def test_mongodb():
         db = client['meyleDB']
         collection = db['login_details']
         result = collection.find_one()
-        return jsonify({"status": "success", "result": str(result)})
+
+        if result:
+            return jsonify({"status": "success"})
     except Exception as e:
         logger.error(f"MongoDB connection error: {e}")
         return jsonify({"status": "error", "message": str(e)}), 500
 
-@app.errorhandler(Exception)
-def handle_exception(e):
-    logger.error(f"An error occurred: {e}", exc_info=True)
-    return "Internal Server Error", 500
 
-# Function to translate text
-def translate_text(text, dest_language):
+# Function to translate text with caching
+# @cache.memoize(timeout=3600)  # Cache translations for 1 hour
+@cached(ttl=10800)  # Cache for 3 hour
+async def translate_text(text, dest_language):
     try:
         if dest_language == 'en':  # No translation needed for English
             return text
 
         translator = Translator(to_lang=dest_language)
-        translated = translator.translate(text)
+        translated = await asyncio.to_thread(translator.translate, text)
         return translated
     except Exception as e:
         print(f"Translation error: {e}")
         return text  # Return original text if translation fails
 
 
+async def clear_cache():
+    # Clear the entire cache
+    await Cache().clear()
+    return "Cache cleared successfully!", 200
+
 @app.route('/')
-def Home():
+async def Home():
     # Get user's selected language from cookies (default to English)
     user_lang = request.cookies.get('user_lang', 'en')
 
@@ -65,10 +78,11 @@ def Home():
     with open('translate/index_translate.json', 'r', encoding='utf-8') as json_file:
         text_to_translate = json.load(json_file)
     # Translate the text
-    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+    translated_text = {key: await translate_text(value, user_lang) for key, value in text_to_translate.items()}
 
-    # Render the template with translated text
-    return render_template('index.html', user_lang=user_lang, **translated_text)
+    # Use asyncio.to_thread to run render_template in a separate thread
+    rendered_template = await asyncio.to_thread(render_template, 'index.html', user_lang=user_lang, **translated_text)
+    return rendered_template
 
 
 @app.route('/set_language/<language>')
@@ -80,7 +94,7 @@ def set_language(language):
 
 # ------------------------ login  section ---------------------------------
 @app.route('/login', methods=['GET'])
-def login_user():
+async def login_user():
     # Get user's selected language from cookies (default to English)
     user_lang = request.cookies.get('user_lang', 'en')
 
@@ -88,9 +102,11 @@ def login_user():
     with open('translate/login_translate.json', 'r', encoding='utf-8') as json_file:
         text_to_translate = json.load(json_file)
     # Translate the text
-    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+    translated_text = {key: await translate_text(value, user_lang) for key, value in text_to_translate.items()}
 
-    return render_template("login.html", **translated_text)
+    # Use asyncio.to_thread to run render_template in a separate thread
+    rendered_template = await asyncio.to_thread(render_template, 'login.html', user_lang=user_lang, **translated_text)
+    return rendered_template
 
 
 @app.route('/submit_login_details', methods=['POST'])
@@ -129,7 +145,7 @@ def login_failed_user_not_found():
 
 # ------------------------ signup section ----------------------------------------------
 @app.route("/sign_up", methods=['GET'])
-def signup_user():
+async def signup_user():
     # Get user's selected language from cookies (default to English)
     user_lang = request.cookies.get('user_lang', 'en')
 
@@ -138,9 +154,11 @@ def signup_user():
     with open('translate/signup_translate.json', 'r', encoding='utf-8') as json_file:
         text_to_translate = json.load(json_file)
     # Translate the text
-    translated_text = {key: translate_text(value, user_lang) for key, value in text_to_translate.items()}
+    translated_text = {key: await translate_text(value, user_lang) for key, value in text_to_translate.items()}
 
-    return render_template("signup.html", **translated_text)
+    # Use asyncio.to_thread to run render_template in a separate thread
+    rendered_template = await asyncio.to_thread(render_template, 'signup.html', user_lang=user_lang, **translated_text)
+    return rendered_template
 
 
 async def send_email_notification_singup(email, username):
@@ -188,9 +206,37 @@ def logout():
     return redirect(url_for("Home"))
 
 
+@app.route('/cart')
+def view_cart():
+    cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
+    product_in_cart = [get_product(product_id=id) for id in cart]
+    total_price = sum(
+        int(product['product_details']['product_price'].replace('$', '').strip())
+        for product in product_in_cart
+    )
+    return render_template('cart.html', products=product_in_cart, total_price=total_price)
+
+
+@app.route('/items')
+def show_items():
+    # Establish a connection to MongoDB
+    client = MongoClient(MONGODB_URL)
+    db = client['E_coms_logic']
+
+    # Create a collection to store images
+    image_collection = db['images']
+
+    # Retrieve a list of image documents from MongoDB
+    product_documents = image_collection.find()
+
+    # Render an HTML template with image tags for each retrieved image
+    return render_template('item.html', product_documents=product_documents)
+
+
+# -------------------------------  unused ---------------------------------------------
 @app.route('/dashboard')
 def dashboard():
-    if "username" in session:  # check if username is in session
+    if "email" in session:  # check if username is in session
         username = session["username"]
 
         # Connect to mongodb
@@ -360,7 +406,7 @@ def admin():
         username = request.form.get('username')
         email = request.form.get('email')
         balance = request.form.get('balance')
-        user_created = create_user_account(username=username, email=email, balance=balance, password=password)
+        user_created = create_user_account(username=username, email=email, password=password)
         if user_created:
             flash(f"you have created {username} as a user", category='info')
             return render_template("admin.html")
@@ -407,6 +453,12 @@ def root():
 @app.errorhandler(404)
 def page_not_found(e):
     return "Page not found. Please check the URL.", 404
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    logger.error(f"An error occurred: {e}", exc_info=True)
+    return "Internal Server Error", 500
+
 
 
 if __name__ == "__main__":
