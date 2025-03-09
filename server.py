@@ -118,9 +118,6 @@ def delete_user_account(userID):
 
 # ---------- all about products images --------------------------------------------
 def upload_img_to_mongodb(image_file_path, image_format, product_details):
-    # Establish a connection to MongoDB
-    client = MongoClient(MONGODB_URL)
-    db = client['E_coms_logic']
 
     # Create a collection to store images
     image_collection = db['images']
@@ -153,10 +150,8 @@ def upload_img_to_mongodb(image_file_path, image_format, product_details):
     # Insert the image document into MongoDB
     image_collection.insert_one(image_document)
 
-    client.close()
-
     # delete the upload file
-    os.remove(UPLOAD_FOLDER)
+    os.remove(image_file_path)
     return True
 
 
@@ -165,7 +160,7 @@ def validate_product_image(uploaded_image, product_details):
     print(image_format)
 
     # Check if the file is an allowed image format (e.g., JPEG, PNG)
-    allowed_extensions = {'jpg', 'jpeg', 'png', 'gif'}
+    allowed_extensions = {'jpg', 'jpeg', 'png'}
     if '.' in uploaded_image.filename and \
             uploaded_image.filename.rsplit('.', 1)[1].lower() in allowed_extensions:
         print(f'this the file name {uploaded_image.filename} ')

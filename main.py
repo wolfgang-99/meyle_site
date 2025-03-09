@@ -5,9 +5,9 @@ import os
 from dotenv import load_dotenv
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response
+from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, Response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
-    update_withdrawal_collection, delete_user_account, get_product
+    update_withdrawal_collection, delete_user_account, get_product, retrieve_image, validate_product_image
 from translate import Translator
 import json
 from email_module import email_admin, email_user
@@ -27,12 +27,19 @@ app.permanent_session_lifetime = timedelta(hours=3)
 # # Configure Flask-Caching
 # cache = Cache(app, config={'CACHE_TYPE': 'SimpleCache'})  # Use in-memory caching
 
+# mongodb setup
 MONGODB_URL = os.getenv("MONGODB_URL")
+# Establish a connection to MongoDB
+client = MongoClient(MONGODB_URL)
+db = client['meyleDB']
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
 
+
+
+# ---------------- test mongodb connection ----------------------------------------
 @app.route('/test-mongodb')
 def test_mongodb():
     try:
@@ -48,8 +55,8 @@ def test_mongodb():
         return jsonify({"status": "error", "message": str(e)}), 500
 
 
+#  ------------------- language handling ------------------------------------------
 # Function to translate text with caching
-# @cache.memoize(timeout=3600)  # Cache translations for 1 hour
 @cached(ttl=10800)  # Cache for 3 hour
 async def translate_text(text, dest_language):
     try:
@@ -69,6 +76,14 @@ async def clear_cache():
     await Cache().clear()
     return "Cache cleared successfully!", 200
 
+
+@app.route('/set_language/<language>')
+def set_language(language):
+    response = make_response(redirect(url_for("Home")))
+    response.set_cookie('user_lang', language)
+    return response
+
+
 @app.route('/')
 async def Home():
     # Get user's selected language from cookies (default to English)
@@ -83,13 +98,6 @@ async def Home():
     # Use asyncio.to_thread to run render_template in a separate thread
     rendered_template = await asyncio.to_thread(render_template, 'index.html', user_lang=user_lang, **translated_text)
     return rendered_template
-
-
-@app.route('/set_language/<language>')
-def set_language(language):
-    response = make_response(redirect(url_for("Home")))
-    response.set_cookie('user_lang', language)
-    return response
 
 
 # ------------------------ login  section ---------------------------------
@@ -198,14 +206,13 @@ async def submit_signup_details():
         return "Signup Failed", 400
 
 
-# ---------------------- other section -------------------------------------
 @app.route("/logout")
 def logout():
     session.pop("username", None)
     flash('you have logged out', 'info')
     return redirect(url_for("Home"))
 
-
+# ---------------------- product  section -------------------------------------
 @app.route('/cart')
 def view_cart():
     cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
@@ -216,21 +223,55 @@ def view_cart():
     )
     return render_template('cart.html', products=product_in_cart, total_price=total_price)
 
+@app.route('/image/<filename>')
+def get_image(filename):
+    get_image = retrieve_image(filename)
 
-@app.route('/items')
-def show_items():
-    # Establish a connection to MongoDB
-    client = MongoClient(MONGODB_URL)
-    db = client['E_coms_logic']
+    if get_image:
+        # Return the image data as a binary response
+        return Response(get_image['retrieved_image'], content_type=get_image['format'])
 
-    # Create a collection to store images
+
+@app.route('/products')
+def show_products():
     image_collection = db['images']
 
     # Retrieve a list of image documents from MongoDB
     product_documents = image_collection.find()
 
-    # Render an HTML template with image tags for each retrieved image
-    return render_template('item.html', product_documents=product_documents)
+    # Render an HTML template with products
+    return render_template('products.html', products=product_documents)
+
+
+@app.route('/admin/upload_product', methods=['POST'])
+def upload_product():
+    if request.method == 'POST':
+        if 'product_image' in request.files:
+            product_name = request.form.get('product_name')
+            product_id = request.form.get('product_id')
+            product_price = request.form.get('product_price')
+            product_description = request.form.get('product_description')
+            uploaded_image = request.files['product_image']
+
+            product_details = { 'product_id': product_id,
+                                'product_name': product_name,
+                               'product_price': product_price,
+                               'product_description': product_description
+                               }
+
+            result = validate_product_image(uploaded_image, product_details=product_details)
+            if result == True:
+                return f'Image Uploaded and Processed Successfully.'
+            else:
+                return 'Invalid Image Format. Allowed formats are: jpg, jpeg, png'
+        else:
+            return 'No Image Uploaded'
+
+
+# ------------- admin section -------------------------------
+@app.route("/admin/upload")
+def admin_upload():
+    return render_template("upload_product.html")
 
 
 # -------------------------------  unused ---------------------------------------------
