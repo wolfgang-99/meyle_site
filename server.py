@@ -183,33 +183,23 @@ def validate_product_image(uploaded_image, product_details):
 
 
 def retrieve_image(filename):
-    # Establish a connection to MongoDB
-    client = MongoClient(MONGODB_URL)
-    db = client['E_coms_logic']
 
     # Create a collection to store images
     image_collection = db['images']
 
     retrieved_image = image_collection.find_one({'filename': filename})
-    if retrieved_image:
-        with open('retrieved_image.jpg', 'wb') as output_image_file:
-            output_image = output_image_file.write(retrieved_image['data'])
 
-            client.close()
-            image_data = {'retrieved_image': retrieved_image['data'],
-                          'format': retrieved_image['format']
-                          }
-            client.close()
-            return image_data
+    if retrieved_image:
+        image_data = {'retrieved_image': retrieved_image['data'],
+                      'format': retrieved_image['format']
+                      }
+        return image_data
     else:
         return "image retrival failed "
 
 
 def get_product(product_id):
     """ this get a product using the product_id given it """
-
-    # Establish a connection to MongoDB
-    db = client['E_coms_logic']
 
     # Create a collection to store images
     image_collection = db['images']

@@ -212,7 +212,8 @@ def logout():
     flash('you have logged out', 'info')
     return redirect(url_for("Home"))
 
-# ---------------------- product  section -------------------------------------
+
+# ---------------------- cart  section -------------------------------------
 @app.route('/cart')
 def view_cart():
     cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
@@ -223,6 +224,18 @@ def view_cart():
     )
     return render_template('cart.html', products=product_in_cart, total_price=total_price)
 
+
+@app.route('/add_to_cart/<product_id>')
+def add_to_cart(product_id):
+
+    cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
+    if product_id not in cart:
+        cart.append(product_id)
+        session['cart'] = cart
+    return redirect(url_for('show_products'))
+
+
+# ---------------------- product  section -------------------------------------
 @app.route('/image/<filename>')
 def get_image(filename):
     get_image = retrieve_image(filename)
