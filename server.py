@@ -116,11 +116,11 @@ def delete_user_account(userID):
         return False
 
 
-# ---------- all about products images --------------------------------------------
-def upload_img_to_mongodb(image_file_path, image_format, product_details):
+# ---------- all about products  and product images --------------------------------------------
+def upload_product(image_file_path, image_format, product_details):
 
-    # Create a collection to store images
-    image_collection = db['images']
+    # Create a collection to store product
+    image_collection = db['products']
 
     # Read the image binary data
     with open(image_file_path, 'rb') as image_file:
@@ -139,7 +139,7 @@ def upload_img_to_mongodb(image_file_path, image_format, product_details):
     image_format = image_format  # You can determine the format using libraries like 'python-magic'
 
     # Store image metadata along with the binary data
-    image_document = {
+    product_document = {
         'filename': image_filename,
         'format': image_format,
         'size': f'{image_size_mb:.2f} MB',
@@ -148,7 +148,7 @@ def upload_img_to_mongodb(image_file_path, image_format, product_details):
     }
 
     # Insert the image document into MongoDB
-    image_collection.insert_one(image_document)
+    image_collection.insert_one(product_document)
 
     # delete the upload file
     os.remove(image_file_path)
@@ -174,18 +174,16 @@ def validate_product_image(uploaded_image, product_details):
         uploaded_image.save(full_path)
         print(f'this is the the full path with securefilename {full_path}')
 
-        # call the upload image function
-        upload_img_to_mongodb(image_file_path=full_path, image_format=image_format, product_details=product_details)
-
-        return True
+        # upload product
+        upload = upload_product(image_file_path=full_path, image_format=image_format, product_details=product_details)
+        if upload:
+            return True
     else:
         return "invalid file format"
 
 
 def retrieve_image(filename):
-
-    # Create a collection to store images
-    image_collection = db['images']
+    image_collection = db['products']
 
     retrieved_image = image_collection.find_one({'filename': filename})
 
@@ -198,11 +196,53 @@ def retrieve_image(filename):
         return "image retrival failed "
 
 
+# ----------------------  product and cart ---------------------------------------
+def save_cart(product_id, email):
+    """
+    This function adds a product to the cart for a given email.
+    If the cart already exists, it appends the product_id to the products list.
+    If the cart does not exist, it creates a new cart document.
+    """
+
+    carts_collection = db['carts']
+
+    # Check if a cart already exists for the given email
+    cart = carts_collection.find_one({'email': email})
+
+    if cart:
+        #  cart exists, update the products list
+        query = {'email': email}
+        carts_collection.update_one(query, {'$push': {'products': product_id}})
+
+    else:
+        # cart does not exist, create a new cart document
+        cart_document = {
+            'email': email,
+            'products': [product_id]  # Initialize the products list with the first product_id
+        }
+        # Insert the new cart document into MongoDB
+        carts_collection.insert_one(cart_document)
+
+    return True
+
+
+def get_cart(email):
+    """ this get cart of user using email  """
+
+    # Create a collection to store images
+    collection = db['carts']
+
+    # Find the selected product in the database by product_id
+    cart = collection.find_one({'email': email})
+
+    return cart
+
+
 def get_product(product_id):
     """ this get a product using the product_id given it """
 
     # Create a collection to store images
-    image_collection = db['images']
+    image_collection = db['products']
 
     # Find the selected product in the database by product_id
     product = image_collection.find_one({'product_details.product_id': product_id})

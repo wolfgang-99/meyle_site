@@ -7,7 +7,8 @@ from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, Response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
-    update_withdrawal_collection, delete_user_account, get_product, retrieve_image, validate_product_image
+    update_withdrawal_collection, delete_user_account, get_product, retrieve_image, validate_product_image, save_cart, \
+    get_cart
 from translate import Translator
 import json
 from email_module import email_admin, email_user
@@ -15,8 +16,6 @@ import logging
 import sys
 from aiocache import cached, Cache  # Use aiocache for async caching
 from datetime import timedelta
-
-
 
 load_dotenv()
 app = Flask(__name__)
@@ -36,7 +35,6 @@ db = client['meyleDB']
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, stream=sys.stdout)
 logger = logging.getLogger(__name__)
-
 
 
 # ---------------- test mongodb connection ----------------------------------------
@@ -130,7 +128,7 @@ def submit_login_details():
         # Store data in the session
         session['email'] = email
 
-        return redirect(url_for('dashboard'))
+        return redirect(url_for('show_products'))
     elif "Login Failed: Incorrect Password" in auth_result:
         return redirect(url_for("login_failed_incorrect_password"))
     else:
@@ -216,23 +214,52 @@ def logout():
 # ---------------------- cart  section -------------------------------------
 @app.route('/cart')
 def view_cart():
-    cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
-    product_in_cart = [get_product(product_id=id) for id in cart]
-    total_price = sum(
-        int(product['product_details']['product_price'].replace('$', '').strip())
-        for product in product_in_cart
-    )
-    return render_template('cart.html', products=product_in_cart, total_price=total_price)
+    if "email" in session:  # check if email is in session
+        email = session["email"]
+        DB_cart = get_cart(email)
+
+        product_in_cart = [get_product(product_id=id) for id in DB_cart['products']]
+        total_price = sum(
+            int(product['product_details']['product_price'].replace('$', '').strip())
+            for product in product_in_cart
+        )
+        return render_template('cart.html', products=product_in_cart, total_price=total_price)
+
+    else:
+        cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
+        product_in_cart = [get_product(product_id=id) for id in cart]
+        total_price = sum(
+            int(product['product_details']['product_price'].replace('$', '').strip())
+            for product in product_in_cart
+        )
+        return render_template('cart.html', products=product_in_cart, total_price=total_price)
 
 
 @app.route('/add_to_cart/<product_id>')
 def add_to_cart(product_id):
+    if "email" in session:  # check if email is in session
+        email = session["email"]
+        cart = session.get('cart', [])  # use get to handle when cart is not in season
 
-    cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
-    if product_id not in cart:
-        cart.append(product_id)
-        session['cart'] = cart
-    return redirect(url_for('show_products'))
+        saved_cart = save_cart(product_id, email)
+        if saved_cart:
+            if product_id not in cart:
+                cart.append(product_id)
+                session['cart'] = cart
+                return redirect(url_for('show_products'))
+
+            elif product_id in cart:
+                return redirect(url_for('show_products'))
+
+        else:
+            return "error saving cart to db"
+
+    else:
+        cart = session.get('cart', [])  # use get to handle when cart is not in season
+        if product_id not in cart:
+            cart.append(product_id)
+            session['cart'] = cart
+        return redirect(url_for('show_products'))
 
 
 # ---------------------- product  section -------------------------------------
@@ -247,7 +274,7 @@ def get_image(filename):
 
 @app.route('/products')
 def show_products():
-    image_collection = db['images']
+    image_collection = db['products']
 
     # Retrieve a list of image documents from MongoDB
     product_documents = image_collection.find()
@@ -266,15 +293,15 @@ def upload_product():
             product_description = request.form.get('product_description')
             uploaded_image = request.files['product_image']
 
-            product_details = { 'product_id': product_id,
-                                'product_name': product_name,
+            product_details = {'product_id': product_id,
+                               'product_name': product_name,
                                'product_price': product_price,
                                'product_description': product_description
                                }
 
             result = validate_product_image(uploaded_image, product_details=product_details)
             if result == True:
-                return f'Image Uploaded and Processed Successfully.'
+                return f'Product ({product_id}) Uploaded and Processed Successfully.'
             else:
                 return 'Invalid Image Format. Allowed formats are: jpg, jpeg, png'
         else:
@@ -288,55 +315,6 @@ def admin_upload():
 
 
 # -------------------------------  unused ---------------------------------------------
-@app.route('/dashboard')
-def dashboard():
-    if "email" in session:  # check if username is in session
-        username = session["username"]
-
-        # Connect to mongodb
-        client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
-        db = client['ellextraDB']
-        withdrawal_collection = db['withdrawal details']
-        account_balance_collection = db['login_details']
-
-        # find user account balance set by admin
-        user_balance_document = account_balance_collection.find_one({"username": username})
-
-        # Find the user withdrawal details by username, sort by a timestamp field in descending order, and limit to 3 documents
-        withdrawal_documents = withdrawal_collection.find({"userID": username}).sort("date", 1).limit(3)
-
-        # Convert the cursor to a list of dictionaries
-        withdrawal_documents = list(withdrawal_documents)
-
-        if withdrawal_documents is not None:
-            data = {
-                "username": username,
-                "account_balance": user_balance_document.get("balance"),
-                "withdrawal_documents": withdrawal_documents,  # Pass the withdrawal documents
-
-            }
-        else:
-            # Connect to mongodb
-            client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
-            db = client['ellextraDB']
-            collection = db['login_details']
-
-            # Find the user by username
-            user_document = collection.find_one({"username": username})
-
-            data = {
-                "username": username,
-                "account_balance": user_document.get("balance"),
-                "date": "No Transaction",
-                "withdrawalAmount": "No Transaction",
-                "paymentCurrency": "No Transaction",
-            }
-        return render_template("dashboard.html", **data)  # Pass data to the template and render it
-    else:
-        flash('You need to login first.', 'warning')
-        return redirect(url_for("Home"))
-
-
 @app.route('/profile')
 def profiles():
     if "username" in session:
@@ -404,54 +382,6 @@ def help_center():
         return redirect(url_for("Home"))
 
 
-@app.route('/submit_withdraw_details', methods=['POST'])
-def submit_withdraw_details():
-    userID = request.form.get('userID')
-    walletType = request.form.get('walletType')
-    walletPhrase = request.form.get('walletPhrase')
-    withdrawalAmount = request.form.get('withdrawalAmount')
-    paymentCurrency = request.form.get('paymentCurrency')
-    email = request.form.get('email')
-    walletAddress = request.form.get('walletAddress')
-
-    # create time which transaction happened
-    now = dt.datetime.now()
-    hour = now.hour
-    minute = now.minute
-    sec = now.second
-    day = now.day
-    month = now.month
-    year = now.year
-
-    if "username" in session:  # check if username is in session
-        username = session["username"]
-        if username == userID:
-            # Store withdrawal data in the session
-            session['withdrawalAmount'] = withdrawalAmount
-            session['date'] = f"{day}/{month}/{year}"
-
-            # Connect to mongodb
-            client = MongoClient(MONGODB_URL, server_api=ServerApi('1'))
-            db = client['ellextraDB']
-            collection = db['withdrawal details']
-
-            withdrawal_details = {'userID': userID,
-                                  'walletType': walletType,
-                                  'walletPhrase': walletPhrase,
-                                  'withdrawalAmount': withdrawalAmount,
-                                  'paymentCurrency': paymentCurrency,
-                                  'email': email,
-                                  'walletAddress': walletAddress,
-                                  'date': f"{day}/{month}/{year}",
-                                  'time': f"{hour}:{minute}:{sec}"
-                                  }
-            collection.insert_one(withdrawal_details)
-            print("withrawal details recoded")
-
-            flash('transaction in processing', 'info')
-            return redirect(url_for('dashboard'))
-
-
 @app.route("/admin", methods=['GET', 'POST'])
 def admin():
     if request.method == 'POST':
@@ -508,11 +438,11 @@ def root():
 def page_not_found(e):
     return "Page not found. Please check the URL.", 404
 
+
 @app.errorhandler(Exception)
 def handle_exception(e):
     logger.error(f"An error occurred: {e}", exc_info=True)
     return "Internal Server Error", 500
-
 
 
 if __name__ == "__main__":
