@@ -8,7 +8,7 @@ from pymongo.server_api import ServerApi
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, Response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
     update_withdrawal_collection, delete_user_account, get_product, retrieve_image, validate_product_image, save_cart, \
-    get_cart
+    get_cart, delete_from_cart
 from translate import Translator
 import json
 from email_module import email_admin, email_user
@@ -218,6 +218,9 @@ def view_cart():
         email = session["email"]
         DB_cart = get_cart(email)
 
+        # initialize cart in session when user is signed in
+        session['cart'] = [id for id in DB_cart['products']]
+
         product_in_cart = [get_product(product_id=id) for id in DB_cart['products']]
         total_price = sum(
             int(product['product_details']['product_price'].replace('$', '').strip())
@@ -260,6 +263,31 @@ def add_to_cart(product_id):
             cart.append(product_id)
             session['cart'] = cart
         return redirect(url_for('show_products'))
+
+@app.route('/remove_from_cart/<product_id>', methods=['POST'])
+def remove_from_cart(product_id):
+    if "email" in session:  # check if email is in session
+        email = session["email"]
+        cart = session.get('cart')  # Use get() to handle the case when 'cart' is not in the session
+
+        for item in cart:
+            if item == product_id:
+                result = delete_from_cart(email, product_id)
+                if result:
+                    cart.remove(item)
+                    session['cart'] = cart
+                    break
+        return redirect(url_for('view_cart'))
+
+    else:
+        cart = session.get('cart', [])  # Use get() to handle the case when 'cart' is not in the session
+
+        for item in cart:
+            if item == product_id:
+                cart.remove(item)
+                session['cart'] = cart
+                break
+        return redirect(url_for('view_cart'))
 
 
 # ---------------------- product  section -------------------------------------

@@ -117,6 +117,15 @@ def delete_user_account(userID):
 
 
 # ---------- all about products  and product images --------------------------------------------
+def get_product(product_id):
+    """ this get a product using the product_id given it """
+
+    image_collection = db['products']
+
+    # Find the selected product by product_id
+    product = image_collection.find_one({'product_details.product_id': product_id})
+
+    return product
 def upload_product(image_file_path, image_format, product_details):
 
     # Create a collection to store product
@@ -196,7 +205,7 @@ def retrieve_image(filename):
         return "image retrival failed "
 
 
-# ----------------------  product and cart ---------------------------------------
+# ----------------------  cart ---------------------------------------
 def save_cart(product_id, email):
     """
     This function adds a product to the cart for a given email.
@@ -238,16 +247,23 @@ def get_cart(email):
     return cart
 
 
-def get_product(product_id):
-    """ this get a product using the product_id given it """
+def delete_from_cart(email,product_id):
+    try:
+        collection = db['carts']
 
-    # Create a collection to store images
-    image_collection = db['products']
+        # Filter for the document to delete
+        filter = {'email': email}
+        action = {'$pull': {'products': product_id}}  # remove a product from product list
+        result = collection.update_one(filter, action)
+        if result:
+            return True
 
-    # Find the selected product in the database by product_id
-    product = image_collection.find_one({'product_details.product_id': product_id})
+        else:
+            print(f"{email} cart not found or updated")
+            return False
 
-    return product
+    except Exception as e:
+        print("An error occurred while removing product from cart: " + str(e))
 
 
 # -------------------------- unused -----------------------------------------------
