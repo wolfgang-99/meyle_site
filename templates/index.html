@@ -21,7 +21,7 @@
 
           <!-- Mobile menu button -->
           <div class="flex lg:hidden">
-            <button type="button" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-black" aria-label="Open main menu">
+            <button type="button" class="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-white" aria-label="Open main menu">
               <span class="sr-only">Open main menu</span>
               <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
@@ -173,7 +173,8 @@
 
           <div class="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
             <!-- Cart SVG with link -->
-            <a href="{{ url_for('view_cart') }}" class="text-gray-100 hover:text-gray-500">
+            <a href="{{ url_for('view_cart') }}" class="text-gray-100 hover:text-white/50 flex items-center">
+              cart
               <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
               </svg>
@@ -228,9 +229,17 @@
                   <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">Features</a>
                   <a href="{{ url_for('show_products') }}" class="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">Marketplace</a>
                   <a href="#" class="-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50">Company</a>
+                        <!-- Cart SVG with link -->
+                  <a href="{{ url_for('view_cart') }}" class="text-base/7 text-gray-900 flex items-center">
+                    cart
+                    <svg class="size-6" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true" data-slot="icon">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 10.5V6a3.75 3.75 0 1 0-7.5 0v4.5m11.356-1.993 1.263 12c.07.665-.45 1.243-1.119 1.243H4.25a1.125 1.125 0 0 1-1.12-1.243l1.264-12A1.125 1.125 0 0 1 5.513 7.5h12.974c.576 0 1.059.435 1.119 1.007ZM8.625 10.5a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm7.5 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Z" />
+                    </svg>
+                  </a>
                 </div>
-                <div class="py-6">
-                  <a href="#" class="-mx-3 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-100 bg-black hover:bg-blue-900">Log in</a>
+                <div class="py-6 space-y-2">
+                  <a href="{{ url_for('login_user') }}" class="-mx-3 text-center px-4 py-2 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-100 bg-black hover:bg-blue-900">Log in</a>
+                  <a href="{{ url_for('signup_user') }}" class="-mx-3 text-center px-4 py-2 block rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-100 bg-black hover:bg-blue-900">sign up</a>
                 </div>
               </div>
             </div>
