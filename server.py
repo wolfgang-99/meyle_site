@@ -5,7 +5,7 @@ from bson import ObjectId
 from dotenv import load_dotenv
 import os
 from werkzeug.utils import secure_filename
-
+from datetime import datetime
 
 # Create a temporary directory to store uploaded images
 UPLOAD_FOLDER = 'product images'
@@ -44,7 +44,6 @@ def authenticate_user(email, password):
             return "Login Failed: User not found"
     except Exception as e:
         return "An error occurred: " + str(e)
-
 
 
 def generate_password():
@@ -126,8 +125,18 @@ def get_product(product_id):
     product = image_collection.find_one({'product_details.product_id': product_id})
 
     return product
-def upload_product(image_file_path, image_format, product_details):
 
+
+def get_product_list():
+    try:
+        collection = db["products"]
+        products = collection.find()
+        return products
+    except Exception as e:
+        print("An error occurred while saving order" + str(e))
+
+
+def upload_product(image_file_path, image_format, product_details):
     # Create a collection to store product
     image_collection = db['products']
 
@@ -247,7 +256,7 @@ def get_cart(email):
     return cart
 
 
-def delete_from_cart(email,product_id):
+def delete_from_cart(email, product_id):
     try:
         collection = db['carts']
 
@@ -264,6 +273,42 @@ def delete_from_cart(email,product_id):
 
     except Exception as e:
         print("An error occurred while removing product from cart: " + str(e))
+
+
+# ---------------------- order section ------------------------------
+def save_order(order):
+    try:
+        collection = db["orders"]
+        collection.insert_one(order)
+        return True
+    except Exception as e:
+        print("An error occurred while saving order" + str(e))
+
+
+def get_order_list():
+    try:
+        collection = db["orders"]
+        orders = collection.find()
+        return orders
+    except Exception as e:
+        print("An error occurred while saving order" + str(e))
+
+
+def get_order_by_id(order_id):
+    try:
+        collection = db["orders"]
+        order = collection.find_one({"order_id": order_id})
+
+        order_time = str(order["order_time"])
+        # Parse the string into a datetime object
+        dt = datetime.fromisoformat(order_time)
+
+        # Format the datetime object into the desired format
+        order["order_time"] = dt.strftime("%B %d, %Y, %I:%M %p")
+
+        return order
+    except Exception as e:
+        print("An error occurred while saving order" + str(e))
 
 
 # -------------------------- unused -----------------------------------------------

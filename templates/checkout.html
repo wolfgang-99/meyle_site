@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Checkout</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <!-- Container -->
+  <div class="container mx-auto px-4 py-8">
+    <!-- Heading -->
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Checkout</h1>
+
+    <!-- Payment Options -->
+    <div class="bg-white rounded-lg shadow-lg p-4 md:p-6 max-w-2xl mx-auto">
+      <!-- Order Summary -->
+      <div class="mb-6">
+        <h2 class="text-lg md:text-xl font-bold text-gray-800 mb-3">Order Summary</h2>
+        <div class="space-y-1 md:space-y-2">
+          <p class="text-sm md:text-base text-gray-600">Total Items: 3</p>
+          <p class="text-sm md:text-base text-gray-600">Shipping: $10.00</p>
+          <p class="text-sm md:text-base text-gray-600">Tax: $5.00</p>
+          <p class="text-lg md:text-xl font-bold text-gray-800">Total: $155.00</p>
+        </div>
+      </div>
+
+      <!-- Payment Methods -->
+      <div class="space-y-4">
+        <!-- Pay with Crypto -->
+        <div class="flex flex-col md:flex-row items-center justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+          <div class="flex items-center mb-2 md:mb-0">
+            <img src="https://img.icons8.com/color/48/000000/bitcoin.png" alt="Crypto" class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-4">
+            <div>
+              <h3 class="text-base md:text-lg font-semibold text-gray-800">Pay with Crypto</h3>
+              <p class="text-xs md:text-sm text-gray-600">Bitcoin, Ethereum, and more</p>
+            </div>
+          </div>
+          <button
+            class="w-full md:w-auto bg-blue-600 text-white py-1 md:py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 text-sm md:text-base"
+          >
+            Select
+          </button>
+        </div>
+
+        <!-- Pay with Dollars -->
+        <div class="flex flex-col md:flex-row items-center justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+          <div class="flex items-center mb-2 md:mb-0">
+            <img src="https://img.icons8.com/color/48/000000/us-dollar.png" alt="Dollars" class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-4">
+            <div>
+              <h3 class="text-base md:text-lg font-semibold text-gray-800">Pay with Dollars</h3>
+              <p class="text-xs md:text-sm text-gray-600">Credit/Debit Card or PayPal</p>
+            </div>
+          </div>
+          <button
+            class="w-full md:w-auto bg-blue-600 text-white py-1 md:py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 text-sm md:text-base"
+          >
+            Select
+          </button>
+        </div>
+
+        <!-- Pay with Naira -->
+        <div class="flex flex-col md:flex-row items-center justify-between p-3 md:p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow duration-300">
+          <div class="flex items-center mb-2 md:mb-0">
+            <img src="https://img.icons8.com/color/48/000000/nigeria.png" alt="Naira" class="w-6 h-6 md:w-8 md:h-8 mr-2 md:mr-4">
+            <div>
+              <h3 class="text-base md:text-lg font-semibold text-gray-800">Pay with Naira</h3>
+              <p class="text-xs md:text-sm text-gray-600">Bank Transfer or Mobile Money</p>
+            </div>
+          </div>
+          <button
+            class="w-full md:w-auto bg-blue-600 text-white py-1 md:py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 text-sm md:text-base"
+          >
+            Select
+          </button>
+        </div>
+      </div>
+
+      <!-- Back to Cart Button -->
+      <div class="mt-6 text-center">
+        <a
+          href="{{ url_for('view_cart') }}"
+          class="inline-block bg-gray-600 text-white py-2 px-6 rounded-lg hover:bg-red-700 transition duration-300 text-sm md:text-base"
+        >
+          Back to Cart
+        </a>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>

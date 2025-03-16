@@ -8,7 +8,7 @@ from pymongo.server_api import ServerApi
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, make_response, Response
 from server import authenticate_user, create_user_account, generate_password, update_login_collection, \
     update_withdrawal_collection, delete_user_account, get_product, retrieve_image, validate_product_image, save_cart, \
-    get_cart, delete_from_cart
+    get_cart, delete_from_cart, save_order, get_order_list, get_product_list, get_order_by_id
 from translate import Translator
 import json
 from email_module import email_admin, email_user
@@ -264,6 +264,7 @@ def add_to_cart(product_id):
             session['cart'] = cart
         return redirect(url_for('show_products'))
 
+
 @app.route('/remove_from_cart/<product_id>', methods=['POST'])
 def remove_from_cart(product_id):
     if "email" in session:  # check if email is in session
@@ -290,6 +291,50 @@ def remove_from_cart(product_id):
         return redirect(url_for('view_cart'))
 
 
+# ---------------------- checkout section ------------------------------
+@app.route("/checkout")
+def check_out():
+    return render_template("checkout.html")
+
+
+# ---------------------- order section ------------------------------
+@app.route("/order")
+def place_order():
+    order_id = "#12345"
+    customer_details = {"name": "John Doe",
+                        "email": "example@gmail.com",
+                        "contact": "+2349023232"}
+    order_list = [{"product_id": "glass",
+                   "quantity": 1,
+                   "price": 50,
+                   }]
+    order_price = 50
+    status = "Pending"
+    shipping_address = "nill"
+    shipping_logistic = "nill"
+    pick_up_branch = "enugu"
+    branch_logistic = 50
+    total_price = 100
+    time = dt.datetime.now()
+
+    order = {"order_id": order_id,
+             "customer_details": customer_details,
+             "order_list": order_list,
+             "order_price": order_price,
+             "status": status,
+             "shipping_address": shipping_address,
+             "shipping_logistic": shipping_logistic,
+             "pick_up_branch": pick_up_branch,
+             "branch_logistic": branch_logistic,
+             "total_price": total_price,
+             "order_time": time
+             }
+
+    saved_order = save_order(order)
+    if saved_order:
+        return "your order have been placed"
+
+
 # ---------------------- product  section -------------------------------------
 @app.route('/image/<filename>')
 def get_image(filename):
@@ -302,13 +347,29 @@ def get_image(filename):
 
 @app.route('/products')
 def show_products():
-    image_collection = db['products']
+    product_list = get_product_list()
 
-    # Retrieve a list of image documents from MongoDB
-    product_documents = image_collection.find()
+    return render_template('products.html', products=product_list)
 
-    # Render an HTML template with products
-    return render_template('products.html', products=product_documents)
+
+# ------------- admin section -------------------------------
+@app.route("/admin/dashboard")
+def admin_dashboard():
+    orders = get_order_list()
+    return render_template("admin-dashboard.html", orders=orders)
+
+
+@app.route('/admin/order_details/<order_id>')
+def order_details(order_id):
+    order = get_order_by_id(order_id)
+    if not order:
+        return "Order not found", 404
+    return render_template('order_details.html', order=order)
+
+
+@app.route("/admin/upload")
+def admin_upload():
+    return render_template("upload_product.html")
 
 
 @app.route('/admin/upload_product', methods=['POST'])
@@ -334,12 +395,6 @@ def upload_product():
                 return 'Invalid Image Format. Allowed formats are: jpg, jpeg, png'
         else:
             return 'No Image Uploaded'
-
-
-# ------------- admin section -------------------------------
-@app.route("/admin/upload")
-def admin_upload():
-    return render_template("upload_product.html")
 
 
 # -------------------------------  unused ---------------------------------------------

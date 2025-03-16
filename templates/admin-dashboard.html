@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="{{ url_for('static', filename='output.css') }}" rel="stylesheet">
+  <title>Admin Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans">
+
+  <!-- Upload Product Link -->
+  <div class="fixed top-4 right-4 z-50">
+    <a
+      href="{{url_for('admin_upload')}}"
+      class="bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition duration-300 shadow-lg text-sm md:text-base"
+    >
+      Upload Product
+    </a>
+  </div>
+
+  <!-- Container -->
+  <div class="container mx-auto px-4 py-8 mt-16 md:mt-8">
+    <!-- Heading -->
+    <h1 class="text-2xl md:text-3xl font-bold text-center text-gray-800 mb-6">Admin Dashboard</h1>
+
+    <!-- Tabs for Navigation -->
+    <div class="flex justify-center space-x-4 mb-6">
+      <button id="orders-tab" class="tab-button bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition duration-300 text-sm md:text-base">
+        Orders
+      </button>
+      <button id="users-tab" class="tab-button bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition duration-300 text-sm md:text-base">
+        Users
+      </button>
+    </div>
+
+    <!-- Orders Section -->
+    <div id="orders-section" class="bg-white rounded-lg shadow-lg p-4 md:p-6">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4">New Customer Orders</h2>
+
+      <!-- Search Bar for Orders -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="search-orders"
+          placeholder="Search orders by Order ID or Customer Name..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+        />
+      </div>
+
+      <!-- Orders Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white">
+          <thead>
+            <tr>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Order ID</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Customer</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Amount</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Status</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="orders-table-body">
+            {% for order in orders %}
+            <tr class="hover:bg-gray-50 transition duration-300">
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">{{ order.order_id }}</td>
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">{{ order.customer_details.name }}</td>
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">${{ order.total_price }}</td>
+              <td class="py-2 px-2 md:px-4 border-b">
+                <span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded-full text-xs md:text-sm">{{ order.status }}</span>
+              </td>
+              <td class="py-2 px-2 md:px-4 border-b">
+                <a
+                  href="{{ url_for('order_details', order_id=order.order_id) }}"
+                  class="text-blue-600 hover:text-blue-800 text-sm md:text-base"
+                >
+                  View Details
+                </a>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- View All Orders Link -->
+      <div class="mt-4 text-right">
+        <a
+          href="/all-orders"
+          class="text-blue-600 hover:text-blue-800 text-sm md:text-base"
+        >
+          View All Orders →
+        </a>
+      </div>
+    </div>
+
+    <!-- Users Section (Hidden by Default) -->
+    <div id="users-section" class="bg-white rounded-lg shadow-lg p-4 md:p-6 hidden">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-800 mb-4">User Accounts</h2>
+
+      <!-- Search Bar for Users -->
+      <div class="mb-4">
+        <input
+          type="text"
+          id="search-users"
+          placeholder="Search users by Name or Email..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm md:text-base"
+        />
+      </div>
+
+      <!-- Users Table -->
+      <div class="overflow-x-auto">
+        <table class="min-w-full bg-white">
+          <thead>
+            <tr>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">User ID</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Name</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Email</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Joined On</th>
+              <th class="py-2 px-2 md:px-4 border-b text-left text-sm md:text-base">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="users-table-body">
+            <!-- Example User Row -->
+            <tr class="hover:bg-gray-50 transition duration-300">
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">#67890</td>
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">Jane Smith</td>
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">jane@example.com</td>
+              <td class="py-2 px-2 md:px-4 border-b text-sm md:text-base">2023-10-01</td>
+              <td class="py-2 px-2 md:px-4 border-b">
+                <button class="text-blue-600 hover:text-blue-800 text-sm md:text-base">View Profile</button>
+              </td>
+            </tr>
+            <!-- Add more rows dynamically -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- View All Accounts Link -->
+      <div class="mt-4 text-right">
+        <a
+          href="/all-accounts"
+          class="text-blue-600 hover:text-blue-800 text-sm md:text-base"
+        >
+          View All Accounts →
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- JavaScript for Tabs and Search -->
+  <script>
+    // Tabs functionality
+    const ordersTab = document.getElementById('orders-tab');
+    const usersTab = document.getElementById('users-tab');
+    const ordersSection = document.getElementById('orders-section');
+    const usersSection = document.getElementById('users-section');
+
+    ordersTab.addEventListener('click', () => {
+      ordersSection.classList.remove('hidden');
+      usersSection.classList.add('hidden');
+      ordersTab.classList.add('bg-blue-600', 'text-white');
+      ordersTab.classList.remove('bg-gray-600');
+      usersTab.classList.add('bg-gray-600', 'text-white');
+      usersTab.classList.remove('bg-blue-600');
+    });
+
+    usersTab.addEventListener('click', () => {
+      usersSection.classList.remove('hidden');
+      ordersSection.classList.add('hidden');
+      usersTab.classList.add('bg-blue-600', 'text-white');
+      usersTab.classList.remove('bg-gray-600');
+      ordersTab.classList.add('bg-gray-600', 'text-white');
+      ordersTab.classList.remove('bg-blue-600');
+    });
+
+    // Search functionality for Orders
+    const searchOrdersInput = document.getElementById('search-orders');
+    const ordersTableBody = document.getElementById('orders-table-body');
+
+    searchOrdersInput.addEventListener('input', () => {
+      const searchTerm = searchOrdersInput.value.toLowerCase();
+      const rows = ordersTableBody.getElementsByTagName('tr');
+
+      for (const row of rows) {
+        const orderId = row.cells[0].textContent.toLowerCase();
+        const customerName = row.cells[1].textContent.toLowerCase();
+
+        if (orderId.includes(searchTerm) || customerName.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    });
+
+    // Search functionality for Users
+    const searchUsersInput = document.getElementById('search-users');
+    const usersTableBody = document.getElementById('users-table-body');
+
+    searchUsersInput.addEventListener('input', () => {
+      const searchTerm = searchUsersInput.value.toLowerCase();
+      const rows = usersTableBody.getElementsByTagName('tr');
+
+      for (const row of rows) {
+        const userName = row.cells[1].textContent.toLowerCase();
+        const userEmail = row.cells[2].textContent.toLowerCase();
+
+        if (userName.includes(searchTerm) || userEmail.includes(searchTerm)) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
