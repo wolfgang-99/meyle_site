@@ -358,6 +358,10 @@ def admin_dashboard():
     orders = get_order_list()
     return render_template("admin-dashboard.html", orders=orders)
 
+@app.route("/admin/all-orders")
+def all_order_and_users():
+    orders = get_order_list()
+    return render_template("all_orders.html", orders=orders)
 
 @app.route('/admin/order_details/<order_id>')
 def order_details(order_id):
